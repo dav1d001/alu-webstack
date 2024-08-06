@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# bash file for the work
+#Configure your domain zone so that the subdomain www and display information about subdomains
 
-
-if [ $# == 2 ]; then
-    domain=$1
-    subdomain=$2
-    SUB_DOMAINS=$subdomain
-else
-    domain=$1
-    SUB_DOMAINS=("www" "lb-01" "web-01" "web-02")
+if [ "$#" = 1 ]
+then
+    subdomains=("www" "lb-01" "web-01" "web-02")
+    for sub_domain in "${subdomains[@]}"
+    do
+	record_type=$(dig $sub_domain.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $4}')
+        destination_ip=$(dig $sub_domain.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $5}')
+	echo "The subdomain $sub_domain is a $record_type record and points to $destination_ip"
+    done
+elif [ "$#" = 2 ]
+then
+    record_type=$(dig $2.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $4}')
+    destination_ip=$(dig $2.$1 | grep -A1 'ANSWER SECTION' | tail -1 | awk '{print $5}')
+    echo "The subdomain $2 is a $record_type record and points to $destination_ip"
 fi
-
-for sub in ${SUB_DOMAINS[@]}; do
-    record_type="$(dig "$sub.$domain" | grep -A1 'ANSWER SECTION:' | tail -1 | awk '{print $4}')"
-    destination=$(dig +short "$sub.$domain" | awk '{print $1}')
-    echo "The subdomain $sub is a $record_type record and points to $destination"
-done
